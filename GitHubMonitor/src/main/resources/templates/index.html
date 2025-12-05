@@ -6,81 +6,410 @@
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
-        .container { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        input[type="text"] { width: 70%; padding: 8px; margin-right: 10px; }
-        button { padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        #updates { margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 4px; min-height: 100px; }
-        .update { padding: 5px; margin: 5px 0; background: #e9ecef; border-radius: 3px; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f8fa;
+        }
+        .container {
+            background: white;
+            border: 1px solid #e1e4e8;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #24292e;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #0366d6;
+            padding-bottom: 10px;
+        }
+        .subtitle {
+            color: #586069;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e1e4e8;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #0366d6;
+            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #2ea44f;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2c974b;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background: #d73a49;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #cb2431;
+            transform: translateY(-1px);
+        }
+        .connection-status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .connected .status-indicator {
+            background-color: #28a745;
+        }
+        .disconnected .status-indicator {
+            background-color: #dc3545;
+        }
+        #updates {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+        }
+        .update {
+            padding: 12px 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #0366d6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .update-info {
+            border-left-color: #17a2b8;
+        }
+        .update-success {
+            border-left-color: #28a745;
+        }
+        .update-error {
+            border-left-color: #dc3545;
+        }
+        .update-warning {
+            border-left-color: #ffc107;
+        }
+        .timestamp {
+            color: #6a737d;
+            font-size: 12px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .info-box {
+            background: #f1f8ff;
+            border: 1px solid #c8e1ff;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #0366d6;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .emoji {
+            font-size: 18px;
+        }
+        @media (max-width: 768px) {
+            body {
+                margin: 10px;
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            input[type="text"] {
+                width: 100%;
+            }
+            .controls {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>GitHub Repository Monitor</h1>
-    <p th:text="${message}">Enter a GitHub repository URL</p>
+    <p class="subtitle">Monitor GitHub repositories in real-time via WebSocket</p>
 
-    <!-- Form for traditional HTTP POST -->
-    <form method="post" action="/submit-repo">
-        <input type="text" name="repoUrl" placeholder="https://github.com/username/repo" required>
-        <button type="submit">Submit (HTTP)</button>
-    </form>
+    <div id="connectionStatus" class="connection-status disconnected">
+        <span class="status-indicator"></span>
+        <span id="statusText">Disconnected</span>
+    </div>
 
-    <hr>
+    <!-- Repository Input -->
+    <div class="input-group">
+        <input type="text" id="wsRepoUrl" placeholder="https://github.com/username/repository">
+        <button class="btn btn-primary" onclick="sendViaWebSocket()">
+            <span class="emoji">🚀</span> Monitor Repository
+        </button>
+    </div>
 
-    <!-- WebSocket Interface -->
-    <h3>Real-time Updates via WebSocket</h3>
-    <input type="text" id="wsRepoUrl" placeholder="https://github.com/username/repo">
-    <button onclick="sendViaWebSocket()">Send via WebSocket</button>
-    <button onclick="connectWebSocket()">Connect WebSocket</button>
-    <button onclick="disconnectWebSocket()">Disconnect</button>
+    <!-- Info Box -->
+    <div class="info-box">
+        <strong>💡 How it works:</strong>
+        <ol style="margin: 10px 0 0 20px; padding: 0;">
+            <li>Enter a GitHub repository URL above</li>
+            <li>Click "Monitor Repository" to fetch current stats</li>
+            <li>The system will automatically monitor for changes (every 60 seconds)</li>
+            <li>Updates appear below in real-time</li>
+        </ol>
+    </div>
 
+    <!-- Connection Controls -->
+    <div class="controls">
+        <button id="connectBtn" class="btn btn-secondary" onclick="connectWebSocket()">
+            <span class="emoji">🔌</span> Connect
+        </button>
+        <button id="disconnectBtn" class="btn btn-danger" onclick="disconnectWebSocket()" disabled>
+            <span class="emoji">🔌</span> Disconnect
+        </button>
+        <button class="btn btn-secondary" onclick="clearUpdates()">
+            <span class="emoji">🧹</span> Clear Updates
+        </button>
+    </div>
+
+    <!-- Updates Display -->
+    <h3>📡 Real-time Updates</h3>
     <div id="updates">
-        <p>Updates will appear here...</p>
+        <div class="update update-info">
+            <span class="timestamp" id="initialTimestamp"></span>
+            <span>Waiting for connection... The system will automatically connect on page load.</span>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e1e4e8; color: #586069; font-size: 14px;">
+        <p><strong>📊 Monitoring:</strong> Tracks stars, forks, issues, and update timestamps</p>
+        <p><strong>⚠️ Rate Limits:</strong> Using GitHub API anonymously (60 requests/hour)</p>
     </div>
 </div>
 
 <script>
     let stompClient = null;
+    let isConnected = false;
+    const initialTimestamp = new Date();
+
+    // Set initial timestamp
+    document.getElementById('initialTimestamp').textContent = initialTimestamp.toLocaleTimeString();
+
+    function updateConnectionStatus(connected) {
+        isConnected = connected;
+        const statusDiv = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const wsRepoUrl = document.getElementById('wsRepoUrl');
+
+        if (connected) {
+            statusDiv.className = 'connection-status connected';
+            statusText.textContent = 'Connected to WebSocket';
+            connectBtn.disabled = true;
+            disconnectBtn.disabled = false;
+            wsRepoUrl.disabled = false;
+            showUpdate('✅ WebSocket connection established successfully!', 'success');
+        } else {
+            statusDiv.className = 'connection-status disconnected';
+            statusText.textContent = 'Disconnected from WebSocket';
+            connectBtn.disabled = false;
+            disconnectBtn.disabled = true;
+            wsRepoUrl.disabled = true;
+            if (isConnected) { // Only show message if we were previously connected
+                showUpdate('❌ WebSocket connection lost. Click "Connect" to reconnect.', 'error');
+            }
+        }
+    }
 
     function connectWebSocket() {
+        if (stompClient && isConnected) {
+            showUpdate('ℹ️ Already connected to WebSocket', 'info');
+            return;
+        }
+
+        showUpdate('🔄 Attempting to connect to WebSocket...', 'info');
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
+
         stompClient.connect({}, function(frame) {
             console.log('Connected: ' + frame);
             stompClient.subscribe('/topic/updates', function(message) {
-                showUpdate(message.body);
+                // Determine message type based on content
+                let type = 'info';
+                if (message.body.includes('✅') || message.body.includes('⭐')) type = 'success';
+                if (message.body.includes('❌') || message.body.includes('Error:')) type = 'error';
+                if (message.body.includes('📅') || message.body.includes('🔄')) type = 'info';
+
+                showUpdate(message.body, type);
             });
-            showUpdate('WebSocket connected!');
+            updateConnectionStatus(true);
+        }, function(error) {
+            console.error('Connection error: ', error);
+            showUpdate('❌ Failed to connect to WebSocket. Please try again.', 'error');
+            updateConnectionStatus(false);
+            // Try to reconnect after 5 seconds
+            setTimeout(connectWebSocket, 5000);
         });
     }
 
     function disconnectWebSocket() {
         if (stompClient !== null) {
             stompClient.disconnect();
+            stompClient = null;
+            showUpdate('👋 Disconnected from WebSocket server.', 'info');
         }
-        showUpdate('WebSocket disconnected');
+        updateConnectionStatus(false);
     }
 
     function sendViaWebSocket() {
-        const repoUrl = document.getElementById('wsRepoUrl').value;
-        if (repoUrl && stompClient) {
-            stompClient.send("/app/send-repo", {}, repoUrl);
-            showUpdate('Sent: ' + repoUrl);
-        } else {
-            showUpdate('Not connected or empty URL');
+        const repoUrl = document.getElementById('wsRepoUrl').value.trim();
+
+        if (!repoUrl) {
+            showUpdate('❌ Please enter a GitHub repository URL', 'error');
+            return;
         }
+
+        if (!repoUrl.includes('github.com')) {
+            showUpdate('❌ Please enter a valid GitHub repository URL (must contain github.com)', 'error');
+            return;
+        }
+
+        if (!isConnected) {
+            showUpdate('❌ Not connected to WebSocket. Please connect first.', 'error');
+            return;
+        }
+
+        showUpdate(`🔄 Sending repository: ${repoUrl}`, 'info');
+        stompClient.send("/app/send-repo", {}, repoUrl);
+        document.getElementById('wsRepoUrl').value = '';
     }
 
-    function showUpdate(message) {
+    function showUpdate(message, type = 'info') {
         const updatesDiv = document.getElementById('updates');
         const updateElement = document.createElement('div');
-        updateElement.className = 'update';
-        updateElement.textContent = new Date().toLocaleTimeString() + ': ' + message;
+        updateElement.className = `update update-${type}`;
+
+        const timestamp = document.createElement('span');
+        timestamp.className = 'timestamp';
+        timestamp.textContent = new Date().toLocaleTimeString();
+
+        const content = document.createElement('span');
+        content.textContent = message;
+
+        updateElement.appendChild(timestamp);
+        updateElement.appendChild(content);
         updatesDiv.appendChild(updateElement);
+
+        // Scroll to bottom
+        updatesDiv.scrollTop = updatesDiv.scrollHeight;
     }
 
-    // Auto-connect on page load
-    window.onload = connectWebSocket;
+    function clearUpdates() {
+        const updatesDiv = document.getElementById('updates');
+        updatesDiv.innerHTML = '';
+
+        // Add initial message back
+        const initialUpdate = document.createElement('div');
+        initialUpdate.className = 'update update-info';
+        const timestamp = document.createElement('span');
+        timestamp.className = 'timestamp';
+        timestamp.textContent = new Date().toLocaleTimeString();
+        const content = document.createElement('span');
+        content.textContent = 'Update log cleared.';
+
+        initialUpdate.appendChild(timestamp);
+        initialUpdate.appendChild(content);
+        updatesDiv.appendChild(initialUpdate);
+    }
+
+    // Auto-connect on page load with retry logic
+    window.onload = function() {
+        connectWebSocket();
+
+        // Set up periodic connection check
+        setInterval(() => {
+            if (!isConnected && !stompClient) {
+                console.log('Attempting to reconnect...');
+                connectWebSocket();
+            }
+        }, 10000); // Check every 10 seconds
+    };
+
+    // Handle Enter key in input field
+    document.getElementById('wsRepoUrl').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendViaWebSocket();
+        }
+    });
 </script>
 </body>
 </html>
