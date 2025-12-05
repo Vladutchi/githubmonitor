@@ -243,10 +243,6 @@
     <!-- Updates Display -->
     <h3>📡 Real-time Updates</h3>
     <div id="updates">
-        <div class="update update-info">
-            <span class="timestamp" id="initialTimestamp"></span>
-            <span>Waiting for connection... The system will automatically connect on page load.</span>
-        </div>
     </div>
 
     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e1e4e8; color: #586069; font-size: 14px;">
@@ -292,11 +288,9 @@
 
     function connectWebSocket() {
         if (stompClient && isConnected) {
-            showUpdate('ℹ️ Already connected to WebSocket', 'info');
             return;
         }
 
-        showUpdate('🔄 Attempting to connect to WebSocket...', 'info');
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
 
@@ -325,9 +319,10 @@
         if (stompClient !== null) {
             stompClient.disconnect();
             stompClient = null;
-            showUpdate('👋 Disconnected from WebSocket server.', 'info');
         }
         updateConnectionStatus(false);
+        clearUpdates();
+        showUpdate('❌ Disconnected from WebSocket server.', 'error');
     }
 
     function sendViaWebSocket() {
@@ -348,7 +343,6 @@
             return;
         }
 
-        showUpdate(`🔄 Sending repository: ${repoUrl}`, 'info');
         stompClient.send("/app/send-repo", {}, repoUrl);
         document.getElementById('wsRepoUrl').value = '';
     }
@@ -376,19 +370,6 @@
     function clearUpdates() {
         const updatesDiv = document.getElementById('updates');
         updatesDiv.innerHTML = '';
-
-        // Add initial message back
-        const initialUpdate = document.createElement('div');
-        initialUpdate.className = 'update update-info';
-        const timestamp = document.createElement('span');
-        timestamp.className = 'timestamp';
-        timestamp.textContent = new Date().toLocaleTimeString();
-        const content = document.createElement('span');
-        content.textContent = 'Update log cleared.';
-
-        initialUpdate.appendChild(timestamp);
-        initialUpdate.appendChild(content);
-        updatesDiv.appendChild(initialUpdate);
     }
 
     // Auto-connect on page load with retry logic
@@ -398,7 +379,6 @@
         // Set up periodic connection check
         setInterval(() => {
             if (!isConnected && !stompClient) {
-                console.log('Attempting to reconnect...');
                 connectWebSocket();
             }
         }, 10000); // Check every 10 seconds
